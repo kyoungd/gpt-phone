@@ -61,5 +61,31 @@ describe('States', () => {
         states.last_state.updated_at = last_updated - 4000;
         expect(states.IsItTimeToRespond).toBe(true);
     });
-    
+
+    it('end of sentence reply test', () => {
+        states.SetText('Hello there');
+        const last_updated = states.last_state.updated_at;
+        expect(states.IsChanged).toBe(true);
+        expect(states.IsSentenceEnded).toBe(false);
+        expect(states.IsItTimeToRespond).toBe(false);
+
+        states.SetText('Hello there');
+        expect(states.IsChanged).toBe(false);
+        expect(states.IsSentenceEnded).toBe(false);
+        states.SetText('Hello there');
+        expect(states.IsChanged).toBe(false);
+        expect(states.IsSentenceEnded).toBe(false);
+
+        states.SetText('Hello there.');
+        expect(states.IsChanged).toBe(true);
+        expect(states.IsSentenceEnded).toBe(true);
+        expect(states.IsItTimeToRespond).toBe(false);
+
+        states.SetText('Hello there.');
+        expect(states.IsChanged).toBe(false);
+
+        states.last_state.updated_at = last_updated - 6000;
+        expect(states.IsItTimeToRespond).toBe(true);
+    });
+
 });

@@ -34,13 +34,16 @@ wss.on("connection", function connection(ws) {
           const msg = states.GetAssemblyMessage(assemblyMsg.data);
           states.SetText(msg);
           console.log(states.Message);
+          if (states.IsChanged && states.IsSentenceEnded) {
+            console.log('Yeah.');
+          }
           if (states.IsItTimeToRespond) {
             console.log('Sending Message Back');
             states.TextToSpeech('Hello there, Young.  Nice to see you again.')
               .then((data) => {
                 console.log('Sending audio back.');
-                const audioContent = data.payload;
-                const binaryData = new Buffer.from(audioContent);
+                const binaryData = data.payload;
+                // const binaryData = new Buffer.from(audioContent);
                 const base64String = binaryData.toString('base64');
                 const message = {
                   event: 'media',

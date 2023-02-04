@@ -2,15 +2,9 @@ const { GenerateSpeech } = require('./text2speech.js');
 
 class States {
     constructor(time_pause = null) {
-        this.texts = {};
-        this.time_pause = time_pause === null ? 5000 : time_pause;
-        this.last_state = {
-            updated_at: null,
-            text: '',
-        };
+        this._time_pause = time_pause === null ? 5000 : time_pause;
         this._streamSid = null;
-        this._isGeneratingSpeech = false;
-        this._isTalking = false;
+        this.Reset();
     }
 
     get Message() {
@@ -29,6 +23,14 @@ class States {
 
     get StreamSid() {
         return this._streamSid;
+    }
+
+    get IsChanged() {
+        return this._isChanged;
+    }
+
+    get IsSentenceEnded() {
+        return this.isSentenceEnd();
     }
 
     GetAssemblyMessage(data, texts = this.texts) {
@@ -57,7 +59,10 @@ class States {
                 text: text,
             }
             this._isTalking = false;
+            this._isChanged = true;
         }
+        else
+            this._isChanged = false;
     }
 
     isSentenceEnd() {
@@ -76,7 +81,7 @@ class States {
             return false;
         const inMilliseconds = this.getTimestamp() - last_state.updated_at;
         // last character in text is a '.'
-        const wait_time = this.isSentenceEnd() ? this.time_pause / 2 : this.time_pause;
+        const wait_time = this.isSentenceEnd() ? this._time_pause / 2 : this._time_pause;
         return (inMilliseconds > wait_time);
     }
 
@@ -88,6 +93,17 @@ class States {
         const raw = await GenerateSpeech(text);
         this._isGeneratingSpeech = false;
         return { payload: raw, streamSid: this._streamSid };
+    }
+
+    Reset() {
+        this.texts = {};
+        this.last_state = {
+            updated_at: null,
+            text: '',
+        };
+        this._isGeneratingSpeech = false;
+        this._isTalking = false;
+        this._isChanged = false;
     }
 
 }

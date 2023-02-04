@@ -8,7 +8,7 @@ const util = require('util');
 
 const client = new textToSpeech.TextToSpeechClient();
 
-async function GenerateSpeech(text) {
+async function GoogleTextToSpeech(text) {
   const outputFile = `./soundbytes/${text.replace(' ', '-')}.mp3`;
   // if (!rawOnly && fs.existsSync(outputFile)) {
   //   // console.log(`Audio content written to file: ${outputFile}`);
@@ -61,5 +61,21 @@ async function SaveSpeechFile(text, data) {
   return outputFile;
 }
 
+function IsSpeechFileExist(text) {
+  const outputFile = SpeechFileName(text);
+  return fs.existsSync(outputFile);
+}
+
+async function GenerateSpeech(text) {
+  if (IsSpeechFileExist(text)) {
+    const outputFile = SpeechFileName(text);
+    const data = fs.readFileSync(outputFile);
+    const buffer = Buffer.from(data);
+    return buffer;
+  }
+  const data = await GoogleTextToSpeech(text);
+  SaveSpeechFile(text, data);
+}
+
 // GenerateSpeech().catch(console.error);
-module.exports = { GenerateSpeech, SpeechFileName, SaveSpeechFile };
+module.exports = { GenerateSpeech, IsSpeechFileExist };
