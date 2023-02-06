@@ -38,7 +38,7 @@ app.post("/voice", async (req, res) => {
         action: '/ack',
         language: 'en-US',
         speechModel: 'phone_call',
-        speechTimeout: 2
+        speechTimeout: 'auto'
     });
     gather.say(voice, 'This is Susan from Accident Specialists.  How can I help you?');
     res.send(twiml.toString());
@@ -50,7 +50,7 @@ app.post("/voice", async (req, res) => {
     phoneCallState.UserInput = userInput;
     phoneCallState.Confidence = confidence;
     const twiml = new VoiceResponse();
-    twiml.say(voice, `Got it.  Hold on.`);
+    twiml.say(voice, `Got it.`);
     twiml.redirect({method: 'POST'}, `${process.env.SELF_URL}/answer`);
     res.send(twiml.toString());
   });

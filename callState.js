@@ -4,9 +4,9 @@ class CallState {
 
     constructor() {
         this._state = {};
-        this._transcriptIndex = 0;
+        this._transcriptIndex = 1;
         this._userInput = '';
-        this._confidence = 1;
+        this._confidence = 0;
     }
 
     get State() {
