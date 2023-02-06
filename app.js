@@ -91,6 +91,10 @@ app.post("/voice", async (req, res) => {
     twiml.hangup();
     res.send(twiml.toString());
 
+  app.get('/ping', (req, res) => {
+    res.send('pong');
+  });
+
     // const userInput = req.body.SpeechResult;
     // const confidence = req.body.Confidence;
     // const twiml = new VoiceResponse();
