@@ -40,7 +40,7 @@ app.post("/voice", async (req, res) => {
         speechModel: 'phone_call',
         speechTimeout: 2
     });
-    gather.say(voice, 'This is Joanna from Accident Specialists.  How can I help you?');
+    gather.say(voice, 'This is Susan from Accident Specialists.  How can I help you?');
     res.send(twiml.toString());
   });
 
