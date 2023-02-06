@@ -1,0 +1,231 @@
+{
+    "audioId": 0,
+    "gpt3": [
+        {
+            "a": "yes",
+            "action": {
+                "answer": [
+                    "yes"
+                ],
+                "is_answered": true,
+                "next": 200,
+                "operation": "match",
+                "score": 1,
+                "similarity": 0
+            },
+            "answer_count": 1,
+            "id": 100,
+            "is_answered": true,
+            "is_field": true,
+            "is_neccessary": false,
+            "is_sympathy": true,
+            "q": " { \"id\": 100, \"q\" : \"asking about automobile accident?\", \"a\" : \"yes\" or \"no\" or \"did not say\" } ",
+            "scope": 100,
+            "score": 1,
+            "type": "greetings"
+        },
+        {
+            "a": "",
+            "answer_count": 0,
+            "id": 102,
+            "is_answered": false,
+            "is_field": true,
+            "is_neccessary": false,
+            "is_sympathy": true,
+            "q": " { \"id\": 102, \"q\" : \"asking for automobile accident?\", \"a\" : \"yes\" or \"no\" or \"did not say\" } ",
+            "scope": 102,
+            "score": 0,
+            "type": "greetings"
+        },
+        {
+            "answer_count": 0,
+            "id": 200,
+            "is_field": false,
+            "is_sympathy": true,
+            "type": "extract"
+        },
+        {
+            "a": "",
+            "answer_count": 0,
+            "id": 201,
+            "is_answered": false,
+            "is_field": true,
+            "is_neccessary": true,
+            "is_sympathy": false,
+            "q": " { \"q\" : \"name of the caller\", \"id\": 201, \"a\" : \"name\" or \"did not say\" } ",
+            "scope": 200,
+            "score": 0,
+            "type": "extract"
+        },
+        {
+            "a": "",
+            "answer_count": 0,
+            "id": 202,
+            "is_answered": false,
+            "is_field": true,
+            "is_neccessary": true,
+            "is_sympathy": false,
+            "q": " { \"q\" : \"phone number\", \"id\": 202, \"a\" : \"phone number\" or \"did not say\" } ",
+            "scope": 200,
+            "score": 0,
+            "type": "extract"
+        },
+        {
+            "a": "",
+            "answer_count": 0,
+            "id": 203,
+            "is_answered": false,
+            "is_field": true,
+            "is_neccessary": true,
+            "is_sympathy": true,
+            "q": " { \"q\" : \"was there injury\", \"id\": 203, \"a\" : \"severe\" or \"mild\" or \"none\" or \"did not say\" } ",
+            "scope": 200,
+            "score": 0,
+            "type": "extract"
+        },
+        {
+            "a": "",
+            "answer_count": 0,
+            "id": 204,
+            "is_answered": false,
+            "is_field": true,
+            "is_neccessary": true,
+            "is_sympathy": true,
+            "q": " { \"q\" : \"was there death\", \"id\": 204, \"a\" : \"yes\" or \"no\" or \"did not say\" } ",
+            "scope": 200,
+            "score": 0,
+            "type": "extract"
+        },
+        {
+            "a": "",
+            "answer_count": 0,
+            "id": 205,
+            "is_answered": false,
+            "is_field": true,
+            "is_neccessary": true,
+            "is_sympathy": true,
+            "q": " { \"q\" : \"was there pain\", \"id\": 205, \"a\" : \"severe\" or \"mild\" or \"none\" or \"did not say\" } ",
+            "scope": 200,
+            "score": 0,
+            "type": "extract"
+        },
+        {
+            "a": "",
+            "answer_count": 0,
+            "id": 206,
+            "is_answered": false,
+            "is_field": true,
+            "is_neccessary": true,
+            "is_sympathy": false,
+            "q": " { \"q\" : \"location of the accident?\", \"id\":206, \"a\" : \"location\" or \"did not say\" } ",
+            "scope": 200,
+            "score": 0,
+            "type": "extract"
+        },
+        {
+            "a": "",
+            "answer_count": 0,
+            "id": 207,
+            "is_answered": false,
+            "is_field": true,
+            "is_neccessary": true,
+            "is_sympathy": false,
+            "q": " { \"q\" : \"when was the accident\", \"id\": 207, \"a\" : \"date\" or \"did not say\" } ",
+            "scope": 200,
+            "score": 0,
+            "type": "extract"
+        },
+        {
+            "a": "",
+            "answer_count": 0,
+            "id": 208,
+            "is_answered": false,
+            "is_field": true,
+            "is_neccessary": true,
+            "is_sympathy": false,
+            "q": " { \"q\" : \"is there a witness\", \"id\":208, \"a\" : \"yes\" or \"no\" or \"did not say\" } ",
+            "scope": 200,
+            "score": 0,
+            "type": "extract"
+        },
+        {
+            "a": "",
+            "answer_count": 0,
+            "id": 209,
+            "is_answered": false,
+            "is_field": true,
+            "is_neccessary": true,
+            "is_sympathy": false,
+            "q": " { \"q\" : \"who is at fault of the accident?\", \"id\":209, \"a\" : \"me\", \"other\", \"I do not know\" or \"did not say\" } ",
+            "scope": 200,
+            "score": 0,
+            "type": "extract"
+        },
+        {
+            "answer_count": 0,
+            "id": 900,
+            "is_field": false,
+            "is_sympathy": true,
+            "type": "goodbye"
+        },
+        {
+            "answer_count": 0,
+            "id": 901,
+            "is_field": false,
+            "is_sympathy": false,
+            "type": "goodbye"
+        },
+        {
+            "answer_count": 0,
+            "id": 902,
+            "is_field": false,
+            "is_sympathy": false,
+            "type": "goodbye"
+        },
+        {
+            "answer_count": 0,
+            "id": 903,
+            "is_field": false,
+            "is_sympathy": false,
+            "type": "goodbye"
+        },
+        {
+            "answer_count": 0,
+            "id": 909,
+            "is_field": false,
+            "is_sympathy": false,
+            "type": "goodbye"
+        }
+    ],
+    "id": 200,
+    "isComplete": false,
+    "name": "",
+    "phone": "",
+    "phone2": "",
+    "pkid": 1,
+    "score": 0,
+    "sequence": "a",
+    "transcript": [
+        {
+            "datetime": "2023-02-05 19:54:30",
+            "name": "AI",
+            "text": "Hi.  I am Amy from Automobile Accident Specialist.  How can I help you?"
+        },
+        {
+            "datetime": "2023-02-05 21:42:19",
+            "name": "Me",
+            "text": "I got into an accident about three days agao.  Can you help?"
+        },
+        {
+            "datetime": "2023-02-05 21:42:20",
+            "name": "AI",
+            "text": "\"I'm so sorry to hear that. Let's see what we can do to help you.\""
+        },
+        {
+            "datetime": "2023-02-05 21:42:20",
+            "name": "AI",
+            "text": "Can you please tell me about the accident?"
+        }
+    ],
+    "type": ""
+}

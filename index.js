@@ -53,7 +53,9 @@ wss.on("connection", function connection(ws) {
                     payload: base64String,
                   },
                 };
-                socket.send(JSON.stringify(message));
+                messageJSON = JSON.stringify(message);
+                socket.send(messageJSON);
+                states.Reset();
               })
               .catch((err) => console.error(err));
           }
