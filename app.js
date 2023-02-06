@@ -76,12 +76,43 @@ app.post("/voice", async (req, res) => {
     res.send(twiml.toString());
   });
 
+  app.post('/acknowledge', async (req, res) => {
+    const userInput = req.body.SpeechResult;
+    const confidence = req.body.Confidence;
+    const twiml = new VoiceResponse();
+    twiml.say(voice, `You said ${userInput} with a confidence of ${confidence}`);
+    twiml.redirect({method: 'POST'}, '/results');
+    res.send(twiml.toString());
+  });
+
+  app.post('/results', async (req, res) => {
+    const twiml = new VoiceResponse();
+    twiml.say(voice, `Thanks for calling.  Bye.`);
+    twiml.hangup();
+    res.send(twiml.toString());
+
+    // const userInput = req.body.SpeechResult;
+    // const confidence = req.body.Confidence;
+    // const twiml = new VoiceResponse();
+
+    // twiml.say(voice, `You said ${userInput} with a confidence of ${confidence}`);
+    // twiml.action="/voice";
+    // const gather = twiml.gather({
+    //     input: 'speech',
+    //     action: '/results',
+    //     language: 'en-US',
+    //     speechModel: 'phone_call',
+    //     speechTimeout: 2
+    // });
+    // gather.say(voice, 'Please tell me what happened.');
+    // res.send(twiml.toString());
+  });
+
   app.get('/ping', (req, res) => {
     res.send('pong');
   });
 
-
   // Start server
-  console.log("Listening at Port 8080");
-  server.listen(process.env.PORT || 8080);
+  console.log("Listening at Port 3000");
+  server.listen(process.env.PORT || 3000);
   
