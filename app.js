@@ -10,9 +10,10 @@ app.use(urlencoded({ extended: false }));
 const VoiceResponse = require('twilio').twiml.VoiceResponse;
 const voice = { voice: 'Polly.Kimberly', language: 'en-US' };
 
-const phoneCallState = new CallState();
+let phoneCallState;
 
 app.post("/voice", async (req, res) => {
+    phoneCallState = new CallState();
     const blank = {};
     const result = await GetNextMessage(blank, '');
     phoneCallState.State = result.data;
