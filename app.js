@@ -16,6 +16,7 @@ app.post("/voice", async (req, res) => {
     const blank = {};
     const result = await GetNextMessage(blank, '');
     phoneCallState.State = result.data;
+    const message = phoneCallState.LastMessage;
 
     res.set("Content-Type", "text/xml");
     // res.send(
@@ -38,9 +39,9 @@ app.post("/voice", async (req, res) => {
         action: '/ack',
         language: 'en-US',
         speechModel: 'phone_call',
-        speechTimeout: 'auto'
+        speechTimeout: phoneCallState.SpeechTimeout
     });
-    gather.say(voice, 'This is Susan from Accident Specialists.  How can I help you?');
+    gather.say(voice, message);
     res.send(twiml.toString());
   });
 
@@ -49,8 +50,9 @@ app.post("/voice", async (req, res) => {
     const confidence = req.body.Confidence;
     phoneCallState.UserInput = userInput;
     phoneCallState.Confidence = confidence;
+    const message = phoneCallState.Reply;
     const twiml = new VoiceResponse();
-    twiml.say(voice, `Got it.`);
+    twiml.say(voice, message);
     twiml.redirect({method: 'POST'}, `${process.env.SELF_URL}/answer`);
     res.send(twiml.toString());
   });
@@ -63,49 +65,20 @@ app.post("/voice", async (req, res) => {
     const result1 = await GetNextMessage(phoneCallState.State, userInput)
     phoneCallState.State = result1.data;
 
+    console.log(phoneCallState.Status);
+
     const message = phoneCallState.LastMessage;
-    console.log('message at /answer: ', message);
     const gather = twiml.gather({
         input: 'speech',
         action: '/ack',
         language: 'en-US',
         speechModel: 'phone_call',
-        speechTimeout: 2
+        speechTimeout: phoneCallState.SpeechTimeout
     });
     gather.say(voice, message);
+    if (phoneCallState.IsPhoneCallEnd)
+      twiml.hangup();
     res.send(twiml.toString());
-  });
-
-  app.post('/acknowledge', async (req, res) => {
-    const userInput = req.body.SpeechResult;
-    const confidence = req.body.Confidence;
-    const twiml = new VoiceResponse();
-    twiml.say(voice, `You said ${userInput} with a confidence of ${confidence}`);
-    twiml.redirect({method: 'POST'}, '/results');
-    res.send(twiml.toString());
-  });
-
-  app.post('/results', async (req, res) => {
-    const twiml = new VoiceResponse();
-    twiml.say(voice, `Thanks for calling.  Bye.`);
-    twiml.hangup();
-    res.send(twiml.toString());
-
-    // const userInput = req.body.SpeechResult;
-    // const confidence = req.body.Confidence;
-    // const twiml = new VoiceResponse();
-
-    // twiml.say(voice, `You said ${userInput} with a confidence of ${confidence}`);
-    // twiml.action="/voice";
-    // const gather = twiml.gather({
-    //     input: 'speech',
-    //     action: '/results',
-    //     language: 'en-US',
-    //     speechModel: 'phone_call',
-    //     speechTimeout: 2
-    // });
-    // gather.say(voice, 'Please tell me what happened.');
-    // res.send(twiml.toString());
   });
 
   app.get('/ping', (req, res) => {

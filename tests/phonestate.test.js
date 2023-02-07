@@ -2,39 +2,45 @@ const CallState = require('../callState.js');
 const GetNextMessage = require('../getNextMessage.js');
 const firstResponse = require('./data/first_response.json');
 
-describe('States', () => {
+describe('phone call state', () => {
+    jest.setTimeout(30000);
     let phoneCallState;
 
     beforeEach(() => {
         phoneCallState = new CallState();
     });
     
-    // it('initalize OK', () => {
-    //     const message = phoneCallState.LastMessage;
-    //     expect(message).toBe('');
-    // });
+    it('initalize OK', () => {
+        const message = phoneCallState.LastMessage;
+        expect(message).toBe('');
+    });
 
-    // it('set state check', () => { 
-    //     phoneCallState.State = firstResponse;
-    //     const firstMessage = phoneCallState.LastMessage;
-    //     expect(firstMessage.length).toBeGreaterThan(0);
-    // });
+    it('set state check', () => { 
+        phoneCallState.State = firstResponse;
+        const firstMessage = phoneCallState.LastMessage;
+        expect(firstMessage.length).toBeGreaterThan(0);
+    });
 
-    // it('first message from api', async () => {
-    //     const blank = {};
-    //     const result = await GetNextMessage(blank, '');
-    //     expect(result.status).toBe(200);
-    //     phoneCallState.State = result.data;
-    //     const firstMessage = phoneCallState.LastMessage;
-    //     expect(firstMessage.length).toBeGreaterThan(0);
-    // });
+    it('first message from api', async () => {
+        const blank = {};
+        const result = await GetNextMessage(blank, '');
+        expect(result.status).toBe(200);
+        phoneCallState.State = result.data;
+        const firstMessage = phoneCallState.LastMessage;
+        expect(firstMessage.length).toBeGreaterThan(0);
+    });
 
     it('next message from api', async () => {
         phoneCallState.State = firstResponse;
+        expect(phoneCallState.Reply).toBe('Got it.');
+        expect(phoneCallState.Status).not.toBe('');
+        const firstMessage = phoneCallState.LastMessage;
+        expect(firstMessage.length).toBeGreaterThan(0);
         const result1 = await GetNextMessage(phoneCallState.State, 'I got into an accident three days ago.  Can you help?');
         expect(result1.status).toBe(200);
         phoneCallState.State = result1.data;
         expect(phoneCallState.State.id).toBe(200);
+        expect(phoneCallState.Reply).toBe('Hold on.  I am writing it down.');
         const secondMessage = phoneCallState.LastMessage;
         expect(secondMessage.length).toBeGreaterThan(0);
         //
