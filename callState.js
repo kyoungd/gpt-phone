@@ -13,6 +13,10 @@ class CallState {
         return this._state;
     }
 
+    get CopyState() {
+        return JSON.parse(JSON.stringify(this._state));
+    }
+
     set State(state) {
         this._state = JSON.parse(JSON.stringify(state));
     }
@@ -62,7 +66,7 @@ class CallState {
             const gpt3s = this._state.gpt3;
             const gpt3 = gpt3s.find(obj => obj.id === id);
             const timeout = gpt3.speechtimeout;
-            return timeout === 0 ? 'auto' : timeout.toString();
+            return timeout === 0 ? 1.5 : timeout.toString();
         }
         catch (err) {
             return 'Okay.';

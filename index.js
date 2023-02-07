@@ -1,3 +1,4 @@
+const fs = require('fs');
 const WebSocket = require("ws");
 const express = require("express");
 const WaveFile = require("wavefile").WaveFile;
@@ -54,6 +55,9 @@ wss.on("connection", function connection(ws) {
                   },
                 };
                 messageJSON = JSON.stringify(message);
+                // write to a temp file
+                fs.writeFileSync('temp.wav', binaryData);
+                fs.writeFileSync('temp.json', messageJSON);
                 socket.send(messageJSON);
                 states.Reset();
               })
@@ -142,10 +146,14 @@ app.post('/status', async(req, res) => {
   res.send('OK');
 });
 
-// Start server
-console.log("Listening at Port 8080");
-server.listen(8080);
 
+app.get('/ping', (req, res) => {
+  res.send('pong');
+});
+
+// Start server
+console.log("Listening at Port 3000");
+server.listen(process.env.PORT || 3000);
 
 
 // function getAssemblyMessage(texts, data) {
