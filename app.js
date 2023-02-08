@@ -17,7 +17,7 @@ function GetInputObject(twiml, timeout) {
     input: 'speech',
     action: '/ack',
     language: 'en-US',
-    speechModel: 'experimental_conversations',
+    speechModel: 'phone_call',
     enhanced: true,
     speechTimeout: timeout
   });
