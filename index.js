@@ -13,13 +13,13 @@ const wss = new WebSocket.Server({ server });
 const LocalState = require('./states.js');
 const CallState = require('./callState.js');
 const GetNextMessage = require('./getNextMessage.js');
+const SMS = require('./sms.js');
 
 let assembly;
 let chunks = [];
 let states;
 let socket;
 let phoneCallState;
-
 
 async function GetNextMessageSafe(phoneState, userInput) {
   try {
@@ -28,14 +28,14 @@ async function GetNextMessageSafe(phoneState, userInput) {
       phoneState.State = result.data;
       const message = phoneState.LastMessage;
       const reply = phoneState.Reply;
-      return {result: true, messaage, reply};
+      return {success: true, message, reply};
     }
     console.log(result && result.status_coode ? result.status_code : 'UNKNOWN ERROR');
-    return {result: false, message:'', reply:''};
+    return {success: false, message:'', reply:''};
   }
   catch (err) {
     console.log(err);
-    return {result:false, message:'', reply:''};
+    return {success:false, message:'', reply:''};
   }
 }
 
@@ -69,6 +69,10 @@ async function TalkSafe(socket, localStates, text) {
   }
 }
 
+const hangupJSON = JSON.stringify({
+  event: "hangup",
+});
+
 function removeWaveHeader(audio) {
 
   const header = audio.slice(0, 44);
@@ -89,7 +93,8 @@ function removeWaveHeader(audio) {
   }
   
   const audioDataStart = dataIndex + 8;   // 4 bytes for size + 4 bytes for "data"
-  const audioData = audio.slice(audioDataStart);
+  console.log('audioDataStart: ' + audioDataStart);
+  const audioData = audio.slice(58);
   
   // audioData now contains the audio data without the wave header
   return audioData;
@@ -115,15 +120,23 @@ wss.on("connection", function connection(ws) {
           const msg = states.GetAssemblyMessage(assemblyMsg.data);
           states.SetText(msg);
           console.log(states.Message);
-          if (states.IsChanged && states.IsSentenceEnded) {
-            console.log('Yeah.');
-          }
+          // if (states.IsChanged && states.IsSentenceEnded) {
+          //   void async function () {
+          //     await TalkSafe(socket, states, 'yeah');
+          //   }().catch(err => console.log(err));
+          // }
           if (states.IsItTimeToRespond) {
-            console.log('Sending Message Back');
-            TalkSafe(socket, states, "Hello there, Young.  Nice to see you again.")
-              .then((data) => {
-                console.log('Sending audio back.');
-              });
+            void async function () {
+              const reply = phoneCallState.Reply;
+              await TalkSafe(socket, states, reply);
+              const result = await GetNextMessageSafe(phoneCallState, states.Message);
+              if (result.success) {
+                await TalkSafe(socket, states, result.message);
+              }
+              else
+                console.log('Error getting call state.');
+              states.Reset();
+            }().catch(err => console.log(err));
           }
         };
         break;
@@ -131,9 +144,15 @@ wss.on("connection", function connection(ws) {
         console.log(`Starting Media Stream ${msg.streamSid}`);
         states.StreamSid = msg.streamSid;
         states.CallSid = msg.start.callSid;
-        const {result, message, reply} = GetNextMessageSafe(phoneCallState, '');
-        if (result)
-          TalkSafe(socket, states, message).then('Sent message');
+        void async function () {
+          const result = await GetNextMessageSafe(phoneCallState, '')
+          if (result.success)
+            TalkSafe(socket, states, result.message).then('Introduction message')
+          else
+            console.log('Error getting call state.');
+        }().catch((err) => {
+          console.log(err);
+        });
         break;
       case "media":
         const twilioData = msg.media.payload;
@@ -166,6 +185,8 @@ wss.on("connection", function connection(ws) {
       case "stop":
         console.log(`Call Has Ended`);
         assembly.send(JSON.stringify({ terminate_session: true }));
+        const smsText = new SMS();
+        smsText.SendSMSFromState(phoneCallState).then('SMS Sent').catch(err => console.log(err));
         break;
     }
   });
@@ -196,19 +217,6 @@ app.post("/voice", async (req, res) => {
       </Connect>
     </Response>
   `);
-  // res.set("Content-Type", "text/xml");
-  // res.send(
-  //   `<Response>
-  //      <Start>
-  //        <Stream url='wss://${req.headers.host}' >
-  //        </Stream>
-  //      </Start>
-  //      <Say voice="Polly.Joanna">
-  //        Start speaking to see your audio transcribed in the console
-  //      </Say>
-  //      <Pause length='30' />
-  //    </Response>`
-  // );
 });
 
 app.post('/status', async(req, res) => {
@@ -224,18 +232,3 @@ app.get('/ping', (req, res) => {
 // Start server
 console.log("Listening at Port 3000");
 server.listen(process.env.PORT || 3000);
-
-
-// function getAssemblyMessage(texts, data) {
-//   const res = JSON.parse(data);
-//   texts[res.audio_start] = res.text;
-//   const keys = Object.keys(texts);
-//   keys.sort((a, b) => a - b);
-//   let msg = '';
-//   for (const key of keys) {
-//     if (texts[key]) {
-//       msg += ` ${texts[key]}`;
-//     }
-//   }
-//   return msg;
-// }
