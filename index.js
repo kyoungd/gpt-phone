@@ -9,11 +9,65 @@ const app = express();
 const server = require("http").createServer(app);
 const wss = new WebSocket.Server({ server });
 const CallStates = require('./states.js');
+const GetNextMessage = require('./getNextMessage.js');
 
 let assembly;
 let chunks = [];
 let states;
 let socket;
+
+
+async function GetNextMessageSafe(phoneCallState, userInput) {
+  try {
+    const result = await GetNextMessage(blank, '');
+    if (result.status === 200) {
+      phoneCallState.State = result.data;
+      const message = phoneCallState.LastMessage;
+      const reply = phoneCallState.Reply;
+      return {result: true, messaage, reply};
+    }
+    console.log(result && result.status_coode ? result.status_code : 'UNKNOWN ERROR');
+    return {result: false, message:'', reply:''};
+  }
+  catch (err) {
+    console.log(err);
+    return {result:false, message:'', reply:''};
+  }
+}
+
+async function TalkSafe(socket, phoneCallState, text) {
+  try {
+    const data = await phoneCallState.TextToSpeech(text);
+    console.log('AI: ' + text);
+  
+    // remove the header
+    const audioContent = data.payload;
+    const binaryData = new Buffer.from(audioContent);
+    const headerlessBinaryData = binaryData.slice(44);
+    const base64String = headerlessBinaryData.toString('base64');
+  
+    const message = {
+      event: 'media',
+      callSid: data.callSid,
+      streamSid: data.streamSid,
+      media: {
+        payload: base64String,
+      },
+    };
+    
+    messageJSON = JSON.stringify(message);
+    // write to a temp file
+    // fs.writeFileSync('temp.wav', audioContent);
+    // fs.writeFileSync('temp-nohead.wav', headerlessBinaryData);
+    // fs.writeFileSync('temp.json', messageJSON);  
+    socket.send(messageJSON);
+    return true;
+  }
+  catch (err) {
+    console.log(err);
+    return false;
+  }
+}
 
 // Handle Web Socket Connection
 wss.on("connection", function connection(ws) {
@@ -43,21 +97,27 @@ wss.on("connection", function connection(ws) {
             states.TextToSpeech('Hello there, Young.  Nice to see you again.')
               .then((data) => {
                 console.log('Sending audio back.');
-                const binaryData = data.payload;
-                // const binaryData = new Buffer.from(audioContent);
-                const base64String = binaryData.toString('base64');
+
+                // remove the header
+                const audioContent = data.payload;
+                const binaryData = new Buffer.from(audioContent);
+                const headerlessBinaryData = binaryData.slice(44);
+                const base64String = headerlessBinaryData.toString('base64');
+
                 const message = {
                   event: 'media',
+                  callSid: data.callSid,
                   streamSid: data.streamSid,
                   media: {
-                    track: 'outbound', 
                     payload: base64String,
                   },
                 };
                 messageJSON = JSON.stringify(message);
                 // write to a temp file
-                fs.writeFileSync('temp.wav', binaryData);
+                fs.writeFileSync('temp.wav', audioContent);
+                fs.writeFileSync('temp-nohead.wav', headerlessBinaryData);
                 fs.writeFileSync('temp.json', messageJSON);
+
                 socket.send(messageJSON);
                 states.Reset();
               })
@@ -78,6 +138,7 @@ wss.on("connection", function connection(ws) {
       case "start":
         console.log(`Starting Media Stream ${msg.streamSid}`);
         states.StreamSid = msg.streamSid;
+        states.CallSid = msg.start.callSid;
         break;
       case "media":
         const twilioData = msg.media.payload;
@@ -125,20 +186,28 @@ app.post("/voice", async (req, res) => {
     { headers: { authorization: process.env.ASSEMBLYAI_API_KEY } }
   );
   
-  res.set("Content-Type", "text/xml");
-  res.send(
-    `<Response>
-       <Start>
-         <Stream url='wss://${req.headers.host}' >
-          <Parameter name="StreamNumber" value ="2131231234"/>
-         </Stream>
-       </Start>
-       <Say voice="Polly.Joanna">
-         Start speaking to see your audio transcribed in the console
-       </Say>
-       <Pause length='30' />
-     </Response>`
-  );
+  res.send(`
+    <Response>
+      <Connect>
+        <Stream url='wss://${req.headers.host}' >
+          <Parameter name="StreamNumber" value="2131231234" />
+        </Stream>
+      </Connect>
+    </Response>
+  `);
+  // res.set("Content-Type", "text/xml");
+  // res.send(
+  //   `<Response>
+  //      <Start>
+  //        <Stream url='wss://${req.headers.host}' >
+  //        </Stream>
+  //      </Start>
+  //      <Say voice="Polly.Joanna">
+  //        Start speaking to see your audio transcribed in the console
+  //      </Say>
+  //      <Pause length='30' />
+  //    </Response>`
+  // );
 });
 
 app.post('/status', async(req, res) => {

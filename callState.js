@@ -7,6 +7,39 @@ class CallState {
         this._transcriptIndex = 0;
         this._userInput = '';
         this._confidence = 0;
+        this._called = '';
+        this._caller = '';
+        this._callSid = '';
+        this._fromCity = '';
+        this._fromState = '';
+    }
+
+    get Called () {
+        return this._called;
+    }
+
+    set Called(called) {
+        this._called = called;
+    }
+
+    get Caller() {
+        return this._caller;
+    }
+
+    set Caller(caller) {
+        this._caller = caller;
+    }
+
+    set CallSid(callSid) {
+        this._callSid = callSid;
+    }
+
+    set FromCity(fromCity) {
+        this._fromCity = fromCity;
+    }
+
+    set FromState(fromState) {
+        this._fromState = fromState;
     }
 
     get State() {
@@ -95,6 +128,22 @@ class CallState {
         }
         catch (err) {
             return false;
+        }
+    }
+
+    get Transcript() {
+        try {
+            const data = `Called: ${this._called}\nCaller: ${this._caller}\nCallSid: ${this._callSid}\nFromCity: ${this._fromCity}\nFromState: ${this._fromState}\n\n`;
+            const arrLength = this._state.transcript.length;
+            const trans = this._state.transcript.reduce((sum, curr, index) => {
+                const extra = (index < arrLength - 1 ? '\n' : '');
+                return sum + `${curr.name}: ${curr.text} ${extra}`;
+            }, data);
+            return trans;
+        }
+        catch (err) {
+            console.log(err);
+            return 'transcript not found.';
         }
     }
 

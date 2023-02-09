@@ -25,6 +25,11 @@ function GetInputObject(twiml, timeout) {
 
 app.post("/voice", async (req, res) => {
     phoneCallState = new CallState();
+    phoneCallState.Called = req.body.Called;
+    phoneCallState.Caller = req.body.Caller;
+    phoneCallState.CallSid = req.body.CallSid;
+    phoneCallState.FromCity = req.body.FromCity;
+    phoneCallState.FromState = req.body.FromState;
     const blank = {};
     const result = await GetNextMessage(blank, '');
     phoneCallState.State = result.data;

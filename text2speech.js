@@ -30,7 +30,8 @@ async function GoogleTextToSpeech(text) {
       ],
       pitch: -1,
       speakingRate: 1.0,
-      audioEncoding: "MULAW"
+      audioEncoding: "MULAW",
+      sampleRateHertz: 8000
     },
   };
 

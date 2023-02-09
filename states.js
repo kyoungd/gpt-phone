@@ -4,6 +4,7 @@ class States {
     constructor(time_pause = null) {
         this._time_pause = time_pause === null ? 5000 : time_pause;
         this._streamSid = null;
+        this._callSid = null;
         this.Reset();
     }
 
@@ -15,6 +16,14 @@ class States {
         if (this._isGeneratingSpeech || this._isTalking)
             return false;
         return this.isTimeToRespond();
+    }
+
+    set CallSid(sid) {
+        this._callSid = sid;
+    }
+
+    get CallSid() {
+        return this._callSid;
     }
 
     set StreamSid(sid) {
@@ -92,7 +101,7 @@ class States {
         this._isTalking = true;
         const raw = await GenerateSpeech(text);
         this._isGeneratingSpeech = false;
-        return { payload: raw, streamSid: this._streamSid };
+        return { payload: raw, streamSid: this._streamSid, callSid: this._callSid };
     }
 
     Reset() {
