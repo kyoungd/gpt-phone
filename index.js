@@ -6,24 +6,28 @@ require('dotenv').config()
 
 const path = require("path")
 const app = express();
+const urlencoded = require('body-parser').urlencoded;
+app.use(urlencoded({ extended: false }));
 const server = require("http").createServer(app);
 const wss = new WebSocket.Server({ server });
-const CallStates = require('./states.js');
+const LocalState = require('./states.js');
+const CallState = require('./callState.js');
 const GetNextMessage = require('./getNextMessage.js');
 
 let assembly;
 let chunks = [];
 let states;
 let socket;
+let phoneCallState;
 
 
-async function GetNextMessageSafe(phoneCallState, userInput) {
+async function GetNextMessageSafe(phoneState, userInput) {
   try {
-    const result = await GetNextMessage(blank, '');
+    const result = await GetNextMessage(phoneState.State, userInput);
     if (result.status === 200) {
-      phoneCallState.State = result.data;
-      const message = phoneCallState.LastMessage;
-      const reply = phoneCallState.Reply;
+      phoneState.State = result.data;
+      const message = phoneState.LastMessage;
+      const reply = phoneState.Reply;
       return {result: true, messaage, reply};
     }
     console.log(result && result.status_coode ? result.status_code : 'UNKNOWN ERROR');
@@ -35,20 +39,20 @@ async function GetNextMessageSafe(phoneCallState, userInput) {
   }
 }
 
-async function TalkSafe(socket, phoneCallState, text) {
+async function TalkSafe(socket, localStates, text) {
   try {
-    const data = await phoneCallState.TextToSpeech(text);
+    const data = await localStates.TextToSpeech(text);
     console.log('AI: ' + text);
   
     // remove the header
     const audioContent = data.payload;
     const binaryData = new Buffer.from(audioContent);
-    const headerlessBinaryData = binaryData.slice(44);
+    // const headerlessBinaryData = binaryData.slice(58);
+    const headerlessBinaryData = removeWaveHeader(binaryData);
     const base64String = headerlessBinaryData.toString('base64');
   
     const message = {
       event: 'media',
-      callSid: data.callSid,
       streamSid: data.streamSid,
       media: {
         payload: base64String,
@@ -56,10 +60,6 @@ async function TalkSafe(socket, phoneCallState, text) {
     };
     
     messageJSON = JSON.stringify(message);
-    // write to a temp file
-    // fs.writeFileSync('temp.wav', audioContent);
-    // fs.writeFileSync('temp-nohead.wav', headerlessBinaryData);
-    // fs.writeFileSync('temp.json', messageJSON);  
     socket.send(messageJSON);
     return true;
   }
@@ -67,6 +67,32 @@ async function TalkSafe(socket, phoneCallState, text) {
     console.log(err);
     return false;
   }
+}
+
+function removeWaveHeader(audio) {
+
+  const header = audio.slice(0, 44);
+  const format = header.slice(0, 4).toString();
+  if (format !== 'RIFF') {
+    throw new Error('Not a valid WAV file');
+  }
+  
+  const chunkSize = header.readUInt32LE(4);
+  const subFormat = header.slice(8, 12).toString();
+  if (subFormat !== 'WAVE') {
+    throw new Error('Not a valid WAV file');
+  }
+  
+  const dataIndex = audio.slice(0, 256).toString().indexOf("data");
+  if (dataIndex === -1) {
+    throw new Error('Not a valid WAV file');
+  }
+  
+  const audioDataStart = dataIndex + 8;   // 4 bytes for size + 4 bytes for "data"
+  const audioData = audio.slice(audioDataStart);
+  
+  // audioData now contains the audio data without the wave header
+  return audioData;
 }
 
 // Handle Web Socket Connection
@@ -94,51 +120,20 @@ wss.on("connection", function connection(ws) {
           }
           if (states.IsItTimeToRespond) {
             console.log('Sending Message Back');
-            states.TextToSpeech('Hello there, Young.  Nice to see you again.')
+            TalkSafe(socket, states, "Hello there, Young.  Nice to see you again.")
               .then((data) => {
                 console.log('Sending audio back.');
-
-                // remove the header
-                const audioContent = data.payload;
-                const binaryData = new Buffer.from(audioContent);
-                const headerlessBinaryData = binaryData.slice(58);
-                const base64String = headerlessBinaryData.toString('base64');
-
-                const message = {
-                  event: 'media',
-                  // callSid: data.callSid,
-                  streamSid: data.streamSid,
-                  media: {
-                    payload: base64String,
-                  },
-                };
-                messageJSON = JSON.stringify(message);
-                // write to a temp file
-                fs.writeFileSync('temp.wav', audioContent);
-                fs.writeFileSync('temp-nohead.wav', headerlessBinaryData);
-                fs.writeFileSync('temp.json', messageJSON);
-
-                socket.send(messageJSON);
-                states.Reset();
-              })
-              .catch((err) => console.error(err));
+              });
           }
-          wss.clients.forEach( client => {
-            if (client.readyState === WebSocket.OPEN) {
-              client.send(
-                JSON.stringify({
-                  event: "interim-transcription",
-                  text: states.Message
-                })
-              );
-            }
-          });
         };
         break;
       case "start":
         console.log(`Starting Media Stream ${msg.streamSid}`);
         states.StreamSid = msg.streamSid;
         states.CallSid = msg.start.callSid;
+        const {result, message, reply} = GetNextMessageSafe(phoneCallState, '');
+        if (result)
+          TalkSafe(socket, states, message).then('Sent message');
         break;
       case "media":
         const twilioData = msg.media.payload;
@@ -180,7 +175,13 @@ wss.on("connection", function connection(ws) {
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "/index.html")));
 
 app.post("/voice", async (req, res) => {
-  states = new CallStates();
+  phoneCallState = new CallState();
+  phoneCallState.Called = req.body.Called;
+  phoneCallState.Caller = req.body.Caller;
+  phoneCallState.CallSid = req.body.CallSid;
+  phoneCallState.FromCity = req.body.FromCity;
+  phoneCallState.FromState = req.body.FromState;
+  states = new LocalState();
   assembly = new WebSocket(
     "wss://api.assemblyai.com/v2/realtime/ws?sample_rate=8000",
     { headers: { authorization: process.env.ASSEMBLYAI_API_KEY } }

@@ -23,3 +23,45 @@ Extract the information from the following paragraph and answer them in the json
 11. { "q" : "Your name", "a" : "name" or "did not say" }
 12. { "q" : "your phone number", "a": "number" or "did not say" }
 I was in an accident last week and was injured when I was hit from the rear.
+
+
+            // states.TextToSpeech('Hello there, Young.  Nice to see you again.')
+            //   .then((data) => {
+            //     console.log('Sending audio back.');
+
+            //     // remove the header
+            //     const audioContent = data.payload;
+            //     const binaryData = new Buffer.from(audioContent);
+            //     // const headerlessBinaryData = binaryData.slice(58);
+            //     const headerlessBinaryData = removeWaveHeader(binaryData);
+            //     const base64String = headerlessBinaryData.toString('base64');
+
+            //     const message = {
+            //       event: 'media',
+            //       // callSid: data.callSid,
+            //       streamSid: data.streamSid,
+            //       media: {
+            //         payload: base64String,
+            //       },
+            //     };
+            //     messageJSON = JSON.stringify(message);
+            //     // write to a temp file
+            //     fs.writeFileSync('temp.wav', audioContent);
+            //     fs.writeFileSync('temp-nohead.wav', headerlessBinaryData);
+            //     fs.writeFileSync('temp.json', messageJSON);
+
+            //     socket.send(messageJSON);
+            //     states.Reset();
+            //   })
+            //   .catch((err) => console.error(err));
+
+          // wss.clients.forEach( client => {
+          //   if (client.readyState === WebSocket.OPEN) {
+          //     client.send(
+          //       JSON.stringify({
+          //         event: "interim-transcription",
+          //         text: states.Message
+          //       })
+          //     );
+          //   }
+          // });
