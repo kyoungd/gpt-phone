@@ -101,12 +101,12 @@ wss.on("connection", function connection(ws) {
                 // remove the header
                 const audioContent = data.payload;
                 const binaryData = new Buffer.from(audioContent);
-                const headerlessBinaryData = binaryData.slice(44);
+                const headerlessBinaryData = binaryData.slice(58);
                 const base64String = headerlessBinaryData.toString('base64');
 
                 const message = {
                   event: 'media',
-                  callSid: data.callSid,
+                  // callSid: data.callSid,
                   streamSid: data.streamSid,
                   media: {
                     payload: base64String,
