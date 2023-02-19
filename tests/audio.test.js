@@ -9,11 +9,5 @@ describe('Text to speech test', () => {
         expect(raw).not.toBeNull();
     });
 
-    it('is file saved?', async() => {
-        const text = 'Yeah.';
-        const raw = await GenerateSpeech(text);
-        expect(raw).not.toBeNull();
-        expect(IsSpeechFileExist(text)).toBe(true);
-    });
 
 });

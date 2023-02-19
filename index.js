@@ -1,8 +1,8 @@
-const fs = require('fs');
 const WebSocket = require("ws");
 const express = require("express");
 const WaveFile = require("wavefile").WaveFile;
 require('dotenv').config()
+const axios = require('axios');
 
 const path = require("path")
 const app = express();
@@ -11,33 +11,13 @@ app.use(urlencoded({ extended: false }));
 const server = require("http").createServer(app);
 const wss = new WebSocket.Server({ server });
 const LocalState = require('./states.js');
-const CallState = require('./callState.js');
-const GetNextMessage = require('./getNextMessage.js');
-const SMS = require('./sms.js');
+const { GetNextMessageSafe } = require('./getNextMessage.js');
 
-let assembly;
-let chunks = [];
-let states;
-let socket;
-let phoneCallState;
-
-async function GetNextMessageSafe(phoneState, userInput) {
-  try {
-    const result = await GetNextMessage(phoneState.State, userInput);
-    if (result.status === 200) {
-      phoneState.State = result.data;
-      const message = phoneState.LastMessage;
-      const reply = phoneState.Reply;
-      return {success: true, message, reply};
-    }
-    console.log(result && result.status_coode ? result.status_code : 'UNKNOWN ERROR');
-    return {success: false, message:'', reply:''};
-  }
-  catch (err) {
-    console.log(err);
-    return {success:false, message:'', reply:''};
-  }
-}
+let assembly;     // Assembly AI WebSocket
+let chunks = [];  // Assembly AI WebSocket audio data chunks
+let states;       // state of the software
+let socket;       // Twilio WebSocket
+let callObject;   // call state object
 
 async function TalkSafe(socket, localStates, text) {
   try {
@@ -127,10 +107,11 @@ wss.on("connection", function connection(ws) {
           // }
           if (states.IsItTimeToRespond) {
             void async function () {
-              const reply = phoneCallState.Reply;
+              const reply = callObject.getters.Reply;
               await TalkSafe(socket, states, reply);
-              const result = await GetNextMessageSafe(phoneCallState, states.Message);
+              const result = await GetNextMessageSafe(callObject, states.Message);
               if (result.success) {
+                callObject = result.callObject;
                 await TalkSafe(socket, states, result.message);
               }
               else
@@ -145,9 +126,11 @@ wss.on("connection", function connection(ws) {
         states.StreamSid = msg.streamSid;
         states.CallSid = msg.start.callSid;
         void async function () {
-          const result = await GetNextMessageSafe(phoneCallState, '')
-          if (result.success)
+          const result = await GetNextMessageSafe(callObject, '')
+          if (result.success) {
+            callObject = result.callObject;
             TalkSafe(socket, states, result.message).then('Introduction message')
+          }
           else
             console.log('Error getting call state.');
         }().catch((err) => {
@@ -185,8 +168,6 @@ wss.on("connection", function connection(ws) {
       case "stop":
         console.log(`Call Has Ended`);
         assembly.send(JSON.stringify({ terminate_session: true }));
-        const smsText = new SMS();
-        smsText.SendSMSFromState(phoneCallState).then('SMS Sent').catch(err => console.log(err));
         break;
     }
   });
@@ -196,12 +177,14 @@ wss.on("connection", function connection(ws) {
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "/index.html")));
 
 app.post("/voice", async (req, res) => {
-  phoneCallState = new CallState();
-  phoneCallState.Called = req.body.Called;
-  phoneCallState.Caller = req.body.Caller;
-  phoneCallState.CallSid = req.body.CallSid;
-  phoneCallState.FromCity = req.body.FromCity;
-  phoneCallState.FromState = req.body.FromState;
+  const call = {
+    called: req.body.Called,
+    caller: req.body.Caller,
+    callSid: req.body.CallSid,
+    fromCity: req.body.FromCity,
+    fromState: req.body.FromState
+  };
+  callObject = { phone: call };
   states = new LocalState();
   assembly = new WebSocket(
     "wss://api.assemblyai.com/v2/realtime/ws?sample_rate=8000",
